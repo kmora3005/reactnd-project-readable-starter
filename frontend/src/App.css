@@ -52,6 +52,10 @@ li a:hover {
   background-color: #111111;
 }
 
-a {
-  margin: 0% 10px;
+a, button {
+  margin: 5px 10px;
+}
+
+span {
+  display:block;
 }

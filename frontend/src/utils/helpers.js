@@ -29,3 +29,18 @@ export const formattedDate=(timestamp)=> {
 
   return formattedDate+" "+formattedTime
 }
+
+export const getCategoryFromLocation=(location)=> {
+  const urlSplitted = location.pathname.replace('post/create','').replace('/comment/create','').split('/')
+  return urlSplitted[1]
+}
+
+export const getIdPostFromLocation=(location)=> {
+  const urlSplitted = location.pathname.replace('post/create','').replace('/comment/create','').split('/')
+  return urlSplitted[2]
+}
+
+export const getIdCommentFromLocation=(location)=> {
+  const urlSplitted = location.pathname.replace('post/create','').replace('/comment/create','').split('/')
+  return urlSplitted[3]
+}

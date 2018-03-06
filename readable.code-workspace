@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "C:\\Users\\kenneth\\Documents\\udacityProjects\\react\\reactnd-udacimeals-complete"
 		}
 	],
 	"settings": {}

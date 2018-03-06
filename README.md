@@ -1,16 +1,31 @@
-# Readable API Server
+# Readable project
 
-This is the second project for my react nanodegree of Udacity course. Users will be able to post content to predefined categories, comment on their posts and other users' posts, and vote on posts and comments. Users will also be able to edit and delete posts and comments.
+This is my second project of react nanodegree program of Udacity. This project is about to post content to predefined categories, comment on its posts and vote on posts and comments. This web app is able to edit and delete posts and comments. 
 
-This repository includes the code for the backend API Server and the front-end portion of the project.
+## Getting Started
 
-## Start Executing
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. The original starter code is [here](https://github.com/udacity/reactnd-project-readable-starter).
+
+### Prerequisites
+
+You must install npm before to follow these instructions. Maybe this [link](https://docs.npmjs.com/getting-started/installing-node) help you.
+
+### Installing
+
+* First, install the API server
+    - `cd api-server`
+    - `npm install`
+
+* Install the front-end part
+    - `cd frontend`
+    - `npm install`
+
+### Running
 
 To get started executing right away:
 
-* Install and start the API server
+* Start the API server
     - `cd api-server`
-    - `npm install`
     - `node server`
 * In another terminal window, start the front-end
     - `cd frontend`
@@ -19,3 +34,11 @@ To get started executing right away:
 ## API Server
 
 Information about the API server and how to use it can be found in its [README file](api-server/README.md).
+
+## Contributing
+
+This project is only to learn react so you can't contribute it.
+
+## License
+
+This project is licensed under the terms of the MIT licens

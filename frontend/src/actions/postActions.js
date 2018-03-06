@@ -1,14 +1,9 @@
 import * as API from '../utils/api'
-
-export const RECEIVE_POSTS = 'RECEIVE_POSTS'
-export const ADD_POST = 'ADD_POST'
-export const REMOVE_POST = 'REMOVE_POST'
-export const UPDATE_POST = 'UPDATE_POST'
-export const VOTE_POST = 'VOTE_POST'
+import * as types from './types'
 
 export const receivePosts = posts => {
   return {
-    type: RECEIVE_POSTS,
+    type: types.RECEIVE_POSTS,
     posts
   }
 }
@@ -19,7 +14,7 @@ export const fetchPosts = () => dispatch => (
 
 export const addPost = posts => {
   return {
-    type: ADD_POST,
+    type: types.ADD_POST,
     posts
   }
 }
@@ -32,7 +27,7 @@ export const dispatchAddPost = (data) => dispatch => (
 
 export const removePost = posts => {
   return {
-    type: REMOVE_POST,
+    type: types.REMOVE_POST,
     posts
   }
 }
@@ -43,7 +38,7 @@ export const dispatchRemovePost = (data) => dispatch => (
 
 export const updatePost = posts => {
   return {
-    type: UPDATE_POST,
+    type: types.UPDATE_POST,
     posts
   }
 }
@@ -55,7 +50,7 @@ export const dispatchUpdatePost = (data) => dispatch => (
 
 export const votePost = (id,option) => {
   return {
-    type: VOTE_POST,
+    type: types.VOTE_POST,
     vote:{id,option}
   }
 }

@@ -1,14 +1,9 @@
 import * as API from '../utils/api'
-
-export const RECEIVE_COMMENTS = 'RECEIVE_COMMENTS'
-export const ADD_COMMENT = 'ADD_COMMENT'
-export const REMOVE_COMMENT = 'REMOVE_COMMENT'
-export const UPDATE_COMMENT = 'UPDATE_COMMENT'
-export const VOTE_COMMENT = 'VOTE_COMMENT'
+import * as types from './types'
 
 export const receiveComments = comments => {
   return {
-    type: RECEIVE_COMMENTS,
+    type: types.RECEIVE_COMMENTS,
     comments
   }
 }
@@ -19,7 +14,7 @@ export const fetchComments = (id) => dispatch => (
 
 export const addComment = comments => {
   return {
-    type: ADD_COMMENT,
+    type: types.ADD_COMMENT,
     comments
   }
 }
@@ -30,7 +25,7 @@ export const dispatchAddComment = (data) => dispatch => (
 
 export const removeComment = comments => {
   return {
-    type: REMOVE_COMMENT,
+    type: types.REMOVE_COMMENT,
     comments
   }
 }
@@ -41,7 +36,7 @@ export const dispatchRemoveComment = (data) => dispatch => (
 
 export const updateComment = comments => {
   return {
-    type: UPDATE_COMMENT,
+    type: types.UPDATE_COMMENT,
     comments
   }
 }
@@ -52,7 +47,7 @@ export const dispatchUpdateComment = (data) => dispatch => (
 
 export const voteComment = (id,option) => {
   return {
-    type: VOTE_COMMENT,
+    type: types.VOTE_COMMENT,
     vote:{id,option}
   }
 }

@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { fetchPosts, dispatchAddPost, dispatchRemovePost, dispatchUpdatePost} from './actions/post_actions'
-import { fetchComments, dispatchAddComment, dispatchRemoveComment, dispatchUpdateComment} from './actions/comment_actions'
+import * as postActions from './actions/postActions'
+import * as commentActions from './actions/commentActions'
 import { Route, withRouter  } from 'react-router-dom'
 import PostPage from './components/PostPage'
 import PostsPage from './components/PostsPage'
 import CommentPage from './components/CommentPage'
 import './App.css';
 import * as API from './utils/api'
+import {getCategoryFromLocation, getIdPostFromLocation, getIdCommentFromLocation} from './utils/helpers'
 
 class App extends Component {
   state = {
@@ -15,6 +16,8 @@ class App extends Component {
     categoryChosen:'',
     postChosen:null,
     commentChosen:null,
+    beginAsEdition:false,
+    beginCommentAsEdition:false,
     orderByValue:'timestamp'
   }
 
@@ -34,6 +37,14 @@ class App extends Component {
     this.setState({commentChosen:comment})
   }
 
+  onUpdateBeginAsEdition=(isForEdition)=>{
+    this.setState({beginAsEdition:isForEdition})
+  }
+
+  onUpdateBeginCommentAsEdition=(isForEdition)=>{
+    this.setState({beginCommentAsEdition:isForEdition})
+  }
+
   getPostChosen=(id)=>{
     return this.props.posts.find(post=>post.id===id)
   }
@@ -43,85 +54,80 @@ class App extends Component {
   }
 
   componentDidMount() {
+    const {comments, getComments,getPosts, location}=this.props
     API.getCategories().then((categories) => {
       this.setState({ categories:categories.categories })
     })
-    
-    this.props.getPosts()
+    getPosts()
 
-    const idPostInPath=this.state.postChosen!=null ? this.state.postChosen.id : this.props.location.pathname.replace('/posts/','').replace('/comment/create','')
-    const comments = this.props.comments.filter(comment=>comment.parentId===idPostInPath)
-    if ((comments.length===0)&&((idPostInPath!=='/')&&(idPostInPath!=='/post/create'))){
-      console.log(idPostInPath)
-      this.props.getComments(idPostInPath)
+    const idPostInPath=this.state.postChosen!=null ? this.state.postChosen.id : getIdPostFromLocation(location)
+    const commentsForPost = comments.filter(comment=>comment.parentId===idPostInPath)
+    if ((commentsForPost.length===0)&&(idPostInPath!=='')){
+      getComments(idPostInPath)
     }
+  }
+
+  buildPages=()=>{
+    const { categories, categoryChosen, postChosen, commentChosen, orderByValue, beginAsEdition, beginCommentAsEdition } = this.state
+    const { posts, addPost, removePost, updatePost, addComment, removeComment, updateComment, getComments, location } = this.props
+    const categoryInPath=postChosen!=null ? postChosen.category : getCategoryFromLocation(location)
+    const idPostInPath=postChosen!=null ? postChosen.id : getIdPostFromLocation(location)
+    const idCommentInPath=commentChosen!=null ? commentChosen.id : getIdCommentFromLocation(location)
+
+  return <div className="App">
+  <Route exact path={`/${categoryInPath}`} render={() => (
+    <PostsPage 
+      categories={categories} 
+      orderByValue={orderByValue} 
+      categoryChosen={categoryInPath} 
+      onUpdateCategoryChosen={this.onUpdateCategoryChosen} 
+      onUpdateOrderBy={this.onUpdateOrderBy} 
+      onUpdatePostChosen={this.onUpdatePostChosen} 
+      onUpdateBeginAsEdition={this.onUpdateBeginAsEdition}
+      />
+  )}/>
+  <Route exact path={`/post/create`} render={() => (
+    <PostPage 
+      categories={categories} 
+      isCreation={true} 
+    />
+  )}/>
+  {(categoryInPath && idPostInPath) ?<Route exact path={`/${categoryInPath}/${idPostInPath}`} render={() => (
+    <PostPage 
+      categories={categories} 
+      isCreation={false} 
+      beginAsEdition={beginAsEdition}
+      postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
+      onUpdateBeginAsEdition={this.onUpdateBeginAsEdition} 
+      onUpdateBeginCommentAsEdition={this.onUpdateBeginCommentAsEdition} 
+      onUpdateCommentChosen={this.onUpdateCommentChosen} 
+    />
+    )}/>:''}
+  <Route exact path={`/${categoryInPath}/${idPostInPath}/comment/create`} render={({ history }) => (
+    <CommentPage 
+      isCreation={true} 
+      postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
+    />
+  )}/>
+  <Route exact path={`/${categoryInPath}/${idPostInPath}/${idCommentInPath}`} render={({ history }) => (
+    <CommentPage 
+      isCreation={false} 
+      beginCommentAsEdition={beginCommentAsEdition}
+      postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
+      commentChosen={commentChosen!=null ? commentChosen: this.getCommentChosen(idCommentInPath)}
+      onUpdateBeginCommentAsEdition={this.onUpdateBeginCommentAsEdition} 
+    />
+  )}/>
+</div>
   }
   
   render() {
-    const { categories, categoryChosen, postChosen, commentChosen, orderByValue } = this.state
-    const { posts, addPost, removePost, updatePost, addComment, removeComment, updateComment, location } = this.props
-    const idPostInPath=postChosen!=null ? postChosen.id : location.pathname.replace('/posts/','').replace('/comment/create','')
-    const idCommentInPath=commentChosen!=null ? commentChosen.id : location.pathname.replace('/posts/'+idPostInPath+'/comments/','')
-
+    const categoryInPath=this.state.postChosen!=null ? this.state.postChosen.category : getCategoryFromLocation(this.props.location)
+    const existCategoryOrIsRoot=categoryInPath===''?true:this.state.categories.findIndex(category=>category.path===categoryInPath)!==-1
+    
     return (
-      <div className="App">
-        <Route exact path={`/${categoryChosen}`} render={() => (
-          <PostsPage 
-            categories={categories} 
-            posts={posts} 
-            orderByValue={orderByValue} 
-            categoryChosen={categoryChosen} 
-            onUpdateCategoryChosen={this.onUpdateCategoryChosen} 
-            onUpdateOrderBy={this.onUpdateOrderBy} 
-            onUpdatePostChosen={this.onUpdatePostChosen} 
-            onRemovePost={removePost} 
-            />
-        )}/>
-        <Route exact path='/post/create' render={({ history }) => (
-          <PostPage 
-            categories={categories} 
-            isCreation={true} 
-            onCreatePost={(post) => {
-              addPost(post)
-              history.push('/')
-            }}
-          />
-        )}/>
-        <Route exact path={`/posts/${idPostInPath}`} render={({ history }) => (
-          <PostPage 
-            categories={categories} 
-            isCreation={false} 
-            postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
-            onRemoveComment={removeComment} 
-            onUpdateCommentChosen={this.onUpdateCommentChosen} 
-            onUpdatePost={(post) => {
-              updatePost(post)
-              history.push(`/posts/${idPostInPath}`)
-            }}
-          />
-          )}/>
-        <Route exact path={`/posts/${idPostInPath}/comment/create`} render={({ history }) => (
-          <CommentPage 
-            isCreation={true} 
-            postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
-            onCreateComment={(comment) => {
-              addComment(comment)
-              history.push(`/posts/${idPostInPath}`)
-            }}
-          />
-        )}/>
-        <Route exact path={`/posts/${idPostInPath}/comments/${idCommentInPath}`} render={({ history }) => (
-          <CommentPage 
-            isCreation={false} 
-            postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
-            commentChosen={commentChosen!=null ? commentChosen: this.getCommentChosen(idCommentInPath)}
-            onUpdateCommentChosen={(comment) => {
-              updateComment(comment)
-              history.push(`/posts/${idPostInPath}`)
-            }}
-          />
-        )}/>
-        
+      <div>
+      {existCategoryOrIsRoot ? this.buildPages() :'This category does not exist'}
       </div>
     )
   }
@@ -129,21 +135,21 @@ class App extends Component {
 
 const mapStateToProps =({ posts, comments }) =>{
   return {
-    posts: posts,
-    comments: comments
+    posts,
+    comments
   }
 }
 
 const mapDispatchToProps =(dispatch)=> {
   return {
-    getPosts: () => dispatch(fetchPosts()),
-    addPost: (data) => dispatch(dispatchAddPost(data)),
-    removePost: (data) => dispatch(dispatchRemovePost(data)),
-    updatePost: (data) => dispatch(dispatchUpdatePost(data)),
-    getComments: (id) => dispatch(fetchComments(id)),
-    addComment: (data) => dispatch(dispatchAddComment(data)),
-    removeComment: (data) => dispatch(dispatchRemoveComment(data)),
-    updateComment: (data) => dispatch(dispatchUpdateComment(data))
+    getPosts: () => dispatch(postActions.fetchPosts()),
+    addPost: (data) => dispatch(postActions.dispatchAddPost(data)),
+    removePost: (data) => dispatch(postActions.dispatchRemovePost(data)),
+    updatePost: (data) => dispatch(postActions.dispatchUpdatePost(data)),
+    getComments: (id) => dispatch(commentActions.fetchComments(id)),
+    addComment: (data) => dispatch(commentActions.dispatchAddComment(data)),
+    removeComment: (data) => dispatch(commentActions.dispatchRemoveComment(data)),
+    updateComment: (data) => dispatch(commentActions.dispatchUpdateComment(data))
   }
 }
 

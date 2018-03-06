@@ -2,8 +2,9 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
 import serializeForm from 'form-serialize'
-import {guid, formattedDate} from '../utils/helpers'
-import { dispatchVoteComment} from '../actions/comment_actions'
+import * as utils from '../utils/helpers'
+import * as commentActions from '../actions/commentActions'
+import RaisedButton from 'material-ui/RaisedButton'
 
 class CommentPage extends Component {
   state = {
@@ -14,16 +15,20 @@ class CommentPage extends Component {
   handleSubmit = (e) => {
     e.preventDefault()
     const values = serializeForm(e.target, { hash: true })
-    const {postChosen, commentChosen, onCreateComment, onUpdateCommentChosen } = this.props
-    if (onCreateComment){
-      values.id = guid()
+    const {postChosen, commentChosen, addComment, updateComment, onUpdateBeginCommentAsEdition, history } = this.props
+    const {isCreation, isEdition} = this.state
+    if (isCreation){
+      values.id = utils.guid()
       values.timestamp=Date.now()
       values.parentId=postChosen.id
-      onCreateComment(values)
+      addComment(values)
+      history.push(`/${postChosen.category}/${postChosen.id}`)
     }
-    else if (onUpdateCommentChosen){
+    else if (isEdition){
       commentChosen.body=values.body
-      onUpdateCommentChosen(commentChosen)
+      updateComment(commentChosen)
+      onUpdateBeginCommentAsEdition(false) 
+      history.push(`/${postChosen.category}/${postChosen.id}`)
     }
   }
 
@@ -32,79 +37,100 @@ class CommentPage extends Component {
   }
 
   onVoteUp = ()=>{
-    const {postChosen, commentChosen, voteComment, location} = this.props
-    const idPostInPath=postChosen!=null ? postChosen.id : location.pathname.replace('/posts/','').replace('/comment/create','')
-    const idCommentInPath=commentChosen!=null ? commentChosen.id : location.pathname.replace('/posts/'+idPostInPath+'/comments/','')
+    const {categoryChosen, postChosen, commentChosen, voteComment, location} = this.props
+    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     voteComment(idCommentInPath,{option:'upVote'})
   }
 
   onVoteDown = ()=>{
-    const {postChosen, commentChosen, voteComment, location} = this.props
-    const idPostInPath=postChosen!=null ? postChosen.id : location.pathname.replace('/posts/','').replace('/comment/create','')
-    const idCommentInPath=commentChosen!=null ? commentChosen.id : location.pathname.replace('/posts/'+idPostInPath+'/comments/','')
+    const {categoryChosen, postChosen, commentChosen, voteComment, location} = this.props
+    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     voteComment(idCommentInPath,{option:'downVote'})
   }
 
+  buildPageInfoComment = ()=>{
+    const {categoryChosen, postChosen, commentChosen, removeComment, location, history} = this.props
+    const {isEdition, isCreation} = this.state
+    const categoryInPath=postChosen!=null ? postChosen.category : utils.getCategoryFromLocation(location)
+    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
+    return <span>
+    {
+      commentChosen ?
+      <RaisedButton onClick={()=>{history.push(`/${categoryInPath}/${idPostInPath}/comment/create`)}}>New</RaisedButton>:''
+    }
+    {
+      commentChosen ? 
+      <RaisedButton onClick={this.onUpdateIsEdition} >Edit</RaisedButton>:''
+    }
+    {
+      commentChosen ?
+      <RaisedButton onClick={()=>{
+        removeComment(this.props.commentChosen)
+        history.push(`/${categoryInPath}/${idPostInPath}/`)
+      }} >Remove</RaisedButton>:''
+    }
+    {commentChosen ?
+      <span>
+      <label>Vote:</label>
+      <RaisedButton onClick={this.onVoteUp} >Up</RaisedButton>
+      <RaisedButton onClick={this.onVoteDown} >Down</RaisedButton>
+      </span>:''
+    }
+    <form onSubmit={this.handleSubmit} >
+      <span>
+        <strong>Body:</strong>
+        { 
+          isEdition || isCreation ?
+          <input type='text' name='body' placeholder='Body' defaultValue={commentChosen ? commentChosen.body:''} />:
+          <label>{commentChosen ? commentChosen.body:''}</label>
+        }
+      </span>
+      <span>
+        <strong>Author:</strong>
+        {
+          isCreation ?
+          <input type='text' name='author' placeholder='Author' defaultValue={commentChosen ? commentChosen.author:''} />:
+          <label>{commentChosen ? commentChosen.author:''}</label>
+        }
+      </span>
+      { 
+        !isCreation ?<span><strong>Date:</strong><label>{commentChosen ? utils.formattedDate(commentChosen.timestamp):''}</label></span>:''
+      }
+      { 
+        !isCreation ?<span><strong>Vote score:</strong><label>{commentChosen ? commentChosen.voteScore:''}</label></span>:''
+      }
+      { 
+        isCreation ?<RaisedButton>Add Comment</RaisedButton>:''
+      }
+      { 
+        isEdition ?<RaisedButton>Update Comment</RaisedButton>:''
+      }
+    </form>
+    </span>
+  }
+
   componentDidMount() {
-    const {isCreation} = this.props
-    this.setState({isCreation:isCreation})
+    const {isCreation, beginCommentAsEdition} = this.props
+    this.setState({isCreation:isCreation, isEdition: beginCommentAsEdition})
   }
 
   render() {
-    const {postChosen, commentChosen, location} = this.props
+    const {categoryChosen, postChosen, commentChosen, removeComment, location, history} = this.props
     const {isEdition, isCreation} = this.state
-    const idPostInPath=postChosen!=null ? postChosen.id : location.pathname.replace('/posts/','').replace('/comment/create','')
+    const categoryInPath=postChosen!=null ? postChosen.category : utils.getCategoryFromLocation(location)
+    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     
     return (
       <div>
-        <Link to='/'>Back</Link>
+        <Link to='/'>Home</Link>
+        <Link to={`/${categoryInPath}/${idPostInPath}`}>Back</Link>
         {
-          commentChosen ?
-          <Link to={`/posts/${idPostInPath}/comment/create`}>New</Link>:''
+          this.state.isCreation || this.props.commentChosen!=null ? this.buildPageInfoComment():'This comment does not exist'
         }
-        {
-          commentChosen ? 
-          <Link to={`/posts/${idPostInPath}/comments/${commentChosen.id}`} onClick={this.onUpdateIsEdition} >Edit</Link>:''
-        }
-        {commentChosen ?
-          <p>
-          <label>Vote:</label>
-          <button onClick={this.onVoteUp} >Up</button>
-          <button onClick={this.onVoteDown} >Down</button>
-          </p>:''
-        }
-        <form onSubmit={this.handleSubmit} >
-          <div>
-          <p>
-            <strong>Body:</strong>
-            { 
-              isEdition || isCreation ?
-              <input type='text' name='body' placeholder='Body' defaultValue={commentChosen ? commentChosen.body:''} />:
-              <label>{commentChosen ? commentChosen.body:''}</label>
-            }
-          </p>
-          <p>
-            <strong>Author:</strong>
-            {
-              isCreation ?
-              <input type='text' name='author' placeholder='Author' defaultValue={commentChosen ? commentChosen.author:''} />:
-              <label>{commentChosen ? commentChosen.author:''}</label>
-            }
-          </p>
-          { 
-            !isCreation ?<p><strong>Date:</strong><label>{commentChosen ? formattedDate(commentChosen.timestamp):''}</label></p>:''
-          }
-          { 
-            !isCreation ?<p><strong>Vote score:</strong><label>{commentChosen ? commentChosen.voteScore:''}</label></p>:''
-          }
-          { 
-            isCreation ?<button>Add Comment</button>:''
-          }
-          { 
-            isEdition ?<button>Update Comment</button>:''
-          }
-          </div>
-        </form>
       </div>
     )
   }
@@ -112,7 +138,10 @@ class CommentPage extends Component {
 
 const mapDispatchToProps =(dispatch)=> {
   return {
-    voteComment: (id,data) => dispatch(dispatchVoteComment(id,data))
+    addComment: (data) => dispatch(commentActions.dispatchAddComment(data)),
+    updateComment: (data) => dispatch(commentActions.dispatchUpdateComment(data)),
+    removeComment: (data) => dispatch(commentActions.dispatchRemoveComment(data)),
+    voteComment: (id,data) => dispatch(commentActions.dispatchVoteComment(id,data))
   }
 }
 
