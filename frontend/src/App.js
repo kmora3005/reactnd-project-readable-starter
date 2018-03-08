@@ -45,6 +45,10 @@ class App extends Component {
     this.setState({beginCommentAsEdition:isForEdition})
   }
 
+  resetPostChosen=()=>{
+    this.setState({postChosen:null})
+  }
+
   getPostChosen=(id)=>{
     return this.props.posts.find(post=>post.id===id)
   }
@@ -68,12 +72,12 @@ class App extends Component {
   }
 
   buildPages=()=>{
-    const { categories, categoryChosen, postChosen, commentChosen, orderByValue, beginAsEdition, beginCommentAsEdition } = this.state
-    const { posts, addPost, removePost, updatePost, addComment, removeComment, updateComment, getComments, location } = this.props
+    const { categories, postChosen, commentChosen, orderByValue, beginAsEdition, beginCommentAsEdition } = this.state
+    const { location } = this.props
     const categoryInPath=postChosen!=null ? postChosen.category : getCategoryFromLocation(location)
     const idPostInPath=postChosen!=null ? postChosen.id : getIdPostFromLocation(location)
     const idCommentInPath=commentChosen!=null ? commentChosen.id : getIdCommentFromLocation(location)
-
+    
   return <div className="App">
   <Route exact path={`/${categoryInPath}`} render={() => (
     <PostsPage 
@@ -89,7 +93,8 @@ class App extends Component {
   <Route exact path={`/post/create`} render={() => (
     <PostPage 
       categories={categories} 
-      isCreation={true} 
+      isCreation={true}
+      resetPostChosen={this.resetPostChosen} 
     />
   )}/>
   {(categoryInPath && idPostInPath) ?<Route exact path={`/${categoryInPath}/${idPostInPath}`} render={() => (
@@ -101,21 +106,24 @@ class App extends Component {
       onUpdateBeginAsEdition={this.onUpdateBeginAsEdition} 
       onUpdateBeginCommentAsEdition={this.onUpdateBeginCommentAsEdition} 
       onUpdateCommentChosen={this.onUpdateCommentChosen} 
+      resetPostChosen={this.resetPostChosen}
     />
     )}/>:''}
-  <Route exact path={`/${categoryInPath}/${idPostInPath}/comment/create`} render={({ history }) => (
+  <Route exact path={`/${categoryInPath}/${idPostInPath}/comment/create`} render={() => (
     <CommentPage 
       isCreation={true} 
       postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
+      resetPostChosen={this.resetPostChosen}
     />
   )}/>
-  <Route exact path={`/${categoryInPath}/${idPostInPath}/${idCommentInPath}`} render={({ history }) => (
+  <Route exact path={`/${categoryInPath}/${idPostInPath}/${idCommentInPath}`} render={() => (
     <CommentPage 
       isCreation={false} 
       beginCommentAsEdition={beginCommentAsEdition}
       postChosen={postChosen!=null ? postChosen: this.getPostChosen(idPostInPath)} 
       commentChosen={commentChosen!=null ? commentChosen: this.getCommentChosen(idCommentInPath)}
       onUpdateBeginCommentAsEdition={this.onUpdateBeginCommentAsEdition} 
+      resetPostChosen={this.resetPostChosen}
     />
   )}/>
 </div>

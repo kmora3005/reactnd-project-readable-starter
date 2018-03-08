@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import * as postActions from '../actions/postActions'
 import * as commentActions from '../actions/commentActions'
 import { Link,withRouter } from 'react-router-dom'
 import RaisedButton from 'material-ui/RaisedButton'

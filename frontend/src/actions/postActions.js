@@ -1,5 +1,6 @@
 import * as API from '../utils/api'
 import * as types from './types'
+import {fetchComments} from './commentActions'
 
 export const receivePosts = posts => {
   return {
@@ -7,9 +8,15 @@ export const receivePosts = posts => {
     posts
   }
 }
+const loadPostWithComments=(dispatch,posts)=>{
+  dispatch(receivePosts(posts))
+  for (let post of posts){
+    dispatch(fetchComments(post.id))
+  }
+}
 export const fetchPosts = () => dispatch => (
   API.getPosts()
-    .then(posts => dispatch(receivePosts(posts)))
+    .then(posts => loadPostWithComments(dispatch,posts) )
 )
 
 export const addPost = posts => {

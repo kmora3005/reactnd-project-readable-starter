@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import serializeForm from 'form-serialize'
 import * as utils from '../utils/helpers'
 import * as commentActions from '../actions/commentActions'
@@ -37,25 +37,22 @@ class CommentPage extends Component {
   }
 
   onVoteUp = ()=>{
-    const {categoryChosen, postChosen, commentChosen, voteComment, location} = this.props
-    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const { commentChosen, voteComment, location} = this.props
     const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     voteComment(idCommentInPath,{option:'upVote'})
   }
 
   onVoteDown = ()=>{
-    const {categoryChosen, postChosen, commentChosen, voteComment, location} = this.props
-    const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
+    const { commentChosen, voteComment, location} = this.props
     const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     voteComment(idCommentInPath,{option:'downVote'})
   }
 
   buildPageInfoComment = ()=>{
-    const {categoryChosen, postChosen, commentChosen, removeComment, location, history} = this.props
+    const { postChosen, commentChosen, removeComment, location, history} = this.props
     const {isEdition, isCreation} = this.state
     const categoryInPath=postChosen!=null ? postChosen.category : utils.getCategoryFromLocation(location)
     const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
-    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     return <span>
     {
       commentChosen ?
@@ -103,10 +100,10 @@ class CommentPage extends Component {
         !isCreation ?<span><strong>Vote score:</strong><label>{commentChosen ? commentChosen.voteScore:''}</label></span>:''
       }
       { 
-        isCreation ?<RaisedButton>Add Comment</RaisedButton>:''
+        isCreation ?<RaisedButton type="submit">Add Comment</RaisedButton>:''
       }
       { 
-        isEdition ?<RaisedButton>Update Comment</RaisedButton>:''
+        isEdition ?<RaisedButton type="submit">Update Comment</RaisedButton>:''
       }
     </form>
     </span>
@@ -118,18 +115,20 @@ class CommentPage extends Component {
   }
 
   render() {
-    const {categoryChosen, postChosen, commentChosen, removeComment, location, history} = this.props
-    const {isEdition, isCreation} = this.state
+    const { postChosen, commentChosen, resetPostChosen, location, history} = this.props
+    const { isCreation} = this.state
     const categoryInPath=postChosen!=null ? postChosen.category : utils.getCategoryFromLocation(location)
     const idPostInPath=postChosen!=null ? postChosen.id : utils.getIdPostFromLocation(location)
-    const idCommentInPath=commentChosen!=null ? commentChosen.id : utils.getIdCommentFromLocation(location)
     
     return (
       <div>
-        <Link to='/'>Home</Link>
-        <Link to={`/${categoryInPath}/${idPostInPath}`}>Back</Link>
+        <RaisedButton onClick={()=>{ 
+          resetPostChosen()
+          history.push('/') }} >Home</RaisedButton>
+        <RaisedButton onClick={()=>{ 
+          history.push(`/${categoryInPath}/${idPostInPath}`) }} >Back</RaisedButton>
         {
-          this.state.isCreation || this.props.commentChosen!=null ? this.buildPageInfoComment():'This comment does not exist'
+          isCreation || commentChosen!=null ? this.buildPageInfoComment():'This comment does not exist'
         }
       </div>
     )

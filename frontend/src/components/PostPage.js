@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link, withRouter } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import serializeForm from 'form-serialize'
 import {guid, formattedDate} from '../utils/helpers'
 import CommentsPage from '../components/CommentsPage'
@@ -152,20 +152,20 @@ class PostPage extends Component {
   }
 
   addVoteScore = ()=>{
-    return !this.state.isCreation ?<span><strong>Vote score:</strong><label>{this.props.postChosen ? this.props.postChosen.voteScore ? this.props.postChosen.voteScore:'1':'1'}</label></span>:''
+    return !this.state.isCreation ?<span><strong>Vote score:</strong><label>{this.props.postChosen ? this.props.postChosen.voteScore ? this.props.postChosen.voteScore:'0':'1'}</label></span>:''
   }
 
   addAddPostButton = ()=>{
-    return this.state.isCreation ?<RaisedButton>Add Post</RaisedButton>:''
+    return this.state.isCreation ?<RaisedButton type="submit">Add Post</RaisedButton>:''
   }
 
   addUpdatePostButton = ()=>{
-    return this.state.isEdition ?<RaisedButton>Update Post</RaisedButton>:''
+    return this.state.isEdition ?<RaisedButton type="submit">Update Post</RaisedButton>:''
   }
 
   addComments = ()=>{
-    const {categories, postChosen, comments, onUpdateCommentChosen,onUpdateBeginCommentAsEdition, removePost,updatePost,location,history} = this.props
-    const {isEdition, isCreation, categoryChosen} = this.state
+    const { postChosen, comments, onUpdateCommentChosen,onUpdateBeginCommentAsEdition,location} = this.props
+    const {isEdition, isCreation} = this.state
     const categoryInPath=postChosen!=null ? postChosen.category : getCategoryFromLocation(location)
     const idPostInPath=postChosen!=null ? postChosen.id : getIdPostFromLocation(location)
     const commentsForPost = comments.filter(comment=>comment.parentId===idPostInPath)
@@ -234,11 +234,14 @@ class PostPage extends Component {
   }
 
   render() {
+    const { postChosen, resetPostChosen, history}=this.props
     return (
       <div>
-        <Link to='/'>Home</Link>
+        <RaisedButton onClick={()=>{ 
+          resetPostChosen()
+          history.push('/') }} >Home</RaisedButton>
         {
-          this.state.isCreation || this.props.postChosen!=null ? this.buildPageInfoPost():'This post does not exist'
+          this.state.isCreation || postChosen!=null ? this.buildPageInfoPost():'This post does not exist'
         }
       </div>)
   }
